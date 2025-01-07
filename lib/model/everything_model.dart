@@ -7,8 +7,7 @@ import 'dart:convert';
 EverythingModel everythingModelFromJson(String str) =>
     EverythingModel.fromJson(json.decode(str));
 
-String everythingModelToJson(EverythingModel data) =>
-    json.encode(data.toJson());
+
 
 class EverythingModel {
   String? status;
@@ -31,13 +30,7 @@ class EverythingModel {
                 json["articles"]!.map((x) => Article.fromJson(x))),
       );
 
-  Map<String, dynamic> toJson() => {
-        "status": status,
-        "totalResults": totalResults,
-        "articles": articles == null
-            ? []
-            : List<dynamic>.from(articles!.map((x) => x.toJson())),
-      };
+
 }
 
 class Article {
@@ -74,16 +67,6 @@ class Article {
         content: json["content"],
       );
 
-  Map<String, dynamic> toJson() => {
-        "source": source?.toJson(),
-        "author": author,
-        "title": title,
-        "description": description,
-        "url": url,
-        "urlToImage": urlToImage,
-        "publishedAt": publishedAt?.toIso8601String(),
-        "content": content,
-      };
 }
 
 class Source {
@@ -100,10 +83,7 @@ class Source {
         name: nameValues.map[json["name"]] ?? Name.NOT_FOUND,
       );
 
-  Map<String, dynamic> toJson() => {
-        "id": idValues.reverse[id],
-        "name": nameValues.reverse[name],
-      };
+
 }
 
 enum Id { THE_VERGE, WIRED, NOT_FOUND }

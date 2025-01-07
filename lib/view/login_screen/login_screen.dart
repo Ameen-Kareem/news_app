@@ -8,11 +8,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Define controllers for the TextFields
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
 
-  // Define a global key for the form
   final _formKey = GlobalKey<FormState>();
 
   String? _validateUsername(String? value) {
@@ -22,7 +20,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
-  // Validation logic for password
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your password';
@@ -33,20 +30,15 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
-  // Function to handle login logic
   Future<void> _login() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // If the form is valid, show a snackbar or perform login action
       await context.read<UserValidationController>().validateUser(
             context: context,
             password: _passwordController.text,
             user: _usernameController.text,
           );
 
-      // Navigator.pushReplacementNamed(context, '/nav_bar');
-      // Here, you can add your login logic (e.g., API call, navigation, etc.)
     } else {
-      // If the form is invalid, do nothing (validation is already triggered)
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please fill in the form correctly')),
       );
@@ -121,6 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(
                   height: 16,
                 ),
+                // Option for creating new account
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

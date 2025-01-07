@@ -1,12 +1,12 @@
 class Dummydb {
   static List category = [
-    "All",
-    "Business",
-    "Entertainment",
-    "General health",
-    "Science",
-    "Sports",
-    "Technology"
+    {"All": "all"},
+    {"Business": "business"},
+    {"Entertainment": "entertainment"},
+    {"General health": "general health"},
+    {"Science": "science"},
+    {"Sports": "sports"},
+    {"Technology": "technology"}
   ];
   static List<Map> countries = [
     {"United Arab Emirates": "ae"},

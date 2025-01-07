@@ -1,23 +1,64 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_carousel_widget/flutter_carousel_widget.dart';
 import 'package:news_app/controller/home_screen_controller.dart';
+import 'package:news_app/controller/user_validation_controller.dart';
 import 'package:news_app/dummydb.dart';
+import 'package:news_app/model/source_model.dart';
 import 'package:news_app/view/search_result_screen/search_result_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({super.key});
-
+  HomeScreen({super.key, country});
+  String? country;
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  String? country;
+  List categories = [];
+  int count = 0;
+  int? id;
+  void refresh() {
+    setState(() {});
+  }
+
+  void initState() {
+    () async {
+      context.watch<UserValidationController>().getUser();
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      id = prefs.getInt('currentUserId');
+      log(id.toString());
+      country = widget.country != null
+          ? widget.country
+          : await context.read<UserValidationController>().getCountry(id ?? 0);
+      log(country.toString());
+    };
+    if (count == 0) {
+      for (int i = 0; i < Dummydb.category.length; i++) {
+        categories.addAll(Dummydb.category[i].keys);
+      }
+      log("categories:$categories");
+      count++;
+    }
+    log("country:$country");
+    super.initState();
+    initializeTrendingNews();
+  }
+
+  initializeTrendingNews() async {
+    await context.read<HomeScreenController>().getTrendingNewsCountry();
+    await context
+        .read<HomeScreenController>()
+        .getNewsByCategory(Dummydb.category[clickedCategory] ?? "All");
+  }
 
   int clickedCategory = 0;
-  // Function to clear the search input field
   Future<void> _search(String query) async {
     if (query.isNotEmpty) {
       await context.read<HomeScreenController>().getAllSearchDetails(query);
@@ -60,15 +101,15 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               children: [
                 searchArea(),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
                 categoryArea(),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
-                latestNewsArea(),
-                SizedBox(
+                latestNewsArea(context),
+                const SizedBox(
                   height: 16,
                 ),
                 followUpNewsArea()
@@ -112,9 +153,13 @@ class _HomeScreenState extends State<HomeScreen> {
         scrollDirection: Axis.horizontal,
         itemCount: Dummydb.category.length,
         itemBuilder: (context, index) => InkWell(
-          onTap: () {
+          onTap: () async {
             _scrollToSelectedIndex(index);
             clickedCategory = index;
+            await context
+                .read<HomeScreenController>()
+                .getNewsByCategory(Dummydb.category[clickedCategory]);
+            log("dummydb:${Dummydb.category[clickedCategory]}");
             setState(() {});
           },
           child: Container(
@@ -124,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 border: Border.all(width: 1),
                 borderRadius: BorderRadius.circular(50)),
             child: Text(
-              "${Dummydb.category[index]}",
+              "${categories[index]}",
               style: TextStyle(
                 color: clickedCategory == index ? Colors.white : Colors.black,
               ),
@@ -138,67 +183,92 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget latestNewsArea() {
-    return Container(
-      child: ExpandableCarousel(
-        options: ExpandableCarouselOptions(
-          // height: 250.0,
-          showIndicator: true, viewportFraction: 1.0,
-          // // aspectRatio: 9 / 16,
-          enableInfiniteScroll: true, autoPlay: true,
-          slideIndicator: CircularSlideIndicator(
-              slideIndicatorOptions: SlideIndicatorOptions(indicatorRadius: 3)),
-        ),
-        items: [1, 2, 3, 4, 5].map((i) {
-          return Builder(
-            builder: (BuildContext context) {
-              return Container(
-                  height: 250,
-                  width: double.infinity,
-                  margin: EdgeInsets.only(right: 1.0),
+  Widget latestNewsArea(BuildContext context) {
+    final homeProvider = context.watch<HomeScreenController>();
+    return homeProvider.trendingArticles.isEmpty
+        ? Center(child: CircularProgressIndicator())
+        : Container(
+            child: ExpandableCarousel.builder(
+              options: ExpandableCarouselOptions(
+                showIndicator: true, viewportFraction: 1.0,
+                // aspectRatio: 9 / 16,
+                enableInfiniteScroll: true, autoPlay: true,
+                slideIndicator: CircularSlideIndicator(
+                    slideIndicatorOptions:
+                        SlideIndicatorOptions(indicatorRadius: 3)),
+              ),
+              itemBuilder: (context, index, realIndex) => Container(
+                height: 180,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    image: DecorationImage(
+                        image: NetworkImage(
+                            homeProvider.trendingArticles[index].urlToImage ??
+                                ""),
+                        fit: BoxFit.cover)),
+                child: Container(
                   decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.circular(15)),
-                  child: Center(
-                    child: Text(
-                      'Trending news ',
-                      style: TextStyle(fontSize: 16.0),
-                    ),
-                  ));
-            },
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [Colors.black, Colors.transparent])),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: homeProvider.isLoading
+                        ? Center(child: CircularProgressIndicator())
+                        : Text(
+                            homeProvider.trendingArticles[index].title ??
+                                "Title Not Found",
+                            style: TextStyle(color: Colors.white, fontSize: 20),
+                          ),
+                  ),
+                ),
+              ),
+              itemCount: 4,
+            ),
           );
-        }).toList(),
-      ),
-    );
   }
 
   Widget followUpNewsArea() {
-    return ListView.separated(
-      separatorBuilder: (context, index) => SizedBox(
-        height: 10,
-      ),
-      shrinkWrap: true,
-      itemCount: 10,
-      physics: NeverScrollableScrollPhysics(),
-      scrollDirection: Axis.vertical,
-      itemBuilder: (context, index) {
-        return Container(
-            height: 140,
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-                border: Border.all(width: 1),
-                borderRadius: BorderRadius.circular(5)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("News source ${index + 1}"),
-                SizedBox(
-                  height: 16,
-                ),
-                Text("News  title${index + 1}")
-              ],
-            ));
-      },
-    );
+    final homeProvider = context.watch<HomeScreenController>();
+    return homeProvider.categoryArticles.isEmpty
+        ? Center(child: CircularProgressIndicator())
+        : ListView.separated(
+            separatorBuilder: (context, index) => SizedBox(
+              height: 10,
+            ),
+            shrinkWrap: true,
+            itemCount: 10,
+            physics: NeverScrollableScrollPhysics(),
+            scrollDirection: Axis.vertical,
+            itemBuilder: (context, index) {
+              return Container(
+                  height: 140,
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                      image: DecorationImage(
+                          image: NetworkImage(
+                              homeProvider.categoryArticles[index].url ?? ""),
+                          fit: BoxFit.cover),
+                      border: Border.all(width: 1),
+                      borderRadius: BorderRadius.circular(5)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(homeProvider.categoryArticles[index].name
+                              .toString() ??
+                          "Source Not Found"),
+                      Spacer(),
+                      Text(
+                        homeProvider.categoryArticles[index].description
+                                .toString() ??
+                            "Source Not Found",
+                        maxLines: 2,
+                      )
+                    ],
+                  ));
+            },
+          );
   }
 }

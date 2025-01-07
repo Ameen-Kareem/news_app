@@ -16,15 +16,8 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Colors.black,
       appBar: AppBar(
-          // leading: InkWell(
-          //     onTap: () => Navigator.pop(context),
-          //     child: Icon(
-          //       Icons.arrow_back,
-          //       color: Colors.white,
-          //     )),
-          // backgroundColor: Colors.black,
+        
           ),
       body: Padding(
         padding: EdgeInsets.all(10),
@@ -37,27 +30,35 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
             // itemCount: 10,
             itemCount: context.watch<HomeScreenController>().articles.length,
             itemBuilder: (context, index) => Container(
-              padding: EdgeInsets.all(10),
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(4),
-                  color: Colors.green,
+                  // color: Colors.green,
                   image: DecorationImage(
                       fit: BoxFit.cover,
                       image: NetworkImage(context
                           .watch<HomeScreenController>()
                           .articles[index]
                           .urlToImage
-                          .toString()))),
+                          .toString() ))),
               height: 200,
               width: double.infinity,
               alignment: Alignment.bottomCenter,
-              child: Text(
-                context.watch<HomeScreenController>().articles[index].title ??
-                    "No news articles",
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold),
+              child: Container(height: 200,width: double.infinity,
+              padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [Colors.black, Colors.transparent])),
+                child: Text(
+                  context.watch<HomeScreenController>().articles[index].title ??
+                      "No news articles",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ),

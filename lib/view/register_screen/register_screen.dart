@@ -106,6 +106,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onTap: () async {
                     if (_formKey.currentState?.validate() ?? false) {
                       await context.read<UserValidationController>().addUser(
+                          context: context,
                           name: _usernameController.text,
                           password: _passwordController.text,
                           email: _emailController.text);
