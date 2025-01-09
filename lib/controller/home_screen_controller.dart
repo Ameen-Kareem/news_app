@@ -4,16 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:news_app/appConfig.dart';
 import 'package:news_app/model/everything_model.dart';
-import 'package:news_app/model/source_model.dart' as source;
 
 class HomeScreenController with ChangeNotifier {
   List<Article> articles = [];
-  List<source.Source> sourceArticles = [];
+  List<Article> sourceArticles = [];
   List<Article> trendingArticles = [];
   bool isLoading = false;
   List<Article> filteredArticles = [];
-  List<source.Source> filteredSourceArticles = [];
-  List<source.Source> categoryArticles = [];
+  List<Article> filteredSourceArticles = [];
+  List<Article> categoryArticles = [];
 
   getAllSearchDetails(String keyword) async {
     isLoading = true;
@@ -72,33 +71,62 @@ class HomeScreenController with ChangeNotifier {
     isLoading = false;
   }
 
-  getNewsByCategory(String category) async {
-    if (category == "All") {
+  //   getNewsByCategory(String category) async {
+
+  //     isLoading = true;
+  //     final url = Uri.parse(
+  //         "https://newsapi.org/v2/top-headlines/sources?category=$category&apiKey=17805df1c36c4c94bb8f56613af2d365");
+  //     final response = await http.get(url);
+
+  //     try {
+  //       log("message:status code:" + response.statusCode.toString());
+  //       if (response.statusCode == 200) {
+  //         categoryArticles =
+  //             source.SourceModel.fromJson(jsonDecode(response.body)).sources ??
+  //                 [];
+  //         filteredSourceArticles = categoryArticles.where((sources) {
+  //           return sources.name != null &&
+  //               sources.name!.isNotEmpty &&
+  //               sources.url != null &&
+  //               sources.url!.isNotEmpty;
+  //         }).toList();
+  //         categoryArticles = filteredSourceArticles;
+  //         log("category:" + categoryArticles.toString());
+  //       } else {
+  //         log("error:status code:" + response.statusCode.toString());
+  //       }
+  //     } catch (e) {
+  //       log("error:" + e.toString());
+  //     }
+  //     isLoading = false;
+  //   }
+  // }
+
+  getNewsByCategory({required String category, String country = "us"}) async {
+    log("received category :" + category);
+    if (category == "All" || category == "all") {
       category = "entertainment";
+      log("entertainment was initailized");
     }
-    log("passed the all boundary condition");
     isLoading = true;
     final url = Uri.parse(
-        "https://newsapi.org/v2/top-headlines/sources?category=$category&apiKey=17805df1c36c4c94bb8f56613af2d365");
+        "https://newsapi.org/v2/top-headlines?country=$country&category=$category&apiKey=17805df1c36c4c94bb8f56613af2d365");
     final response = await http.get(url);
-    log("message" + response.body);
-    log(response.statusCode.toString());
+
+    log(response.body);
     try {
       if (response.statusCode == 200) {
-        log("message:status code:" + response.statusCode.toString());
+        log("entered to initialise categoryarticles");
         categoryArticles =
-            source.SourceModel.fromJson(jsonDecode(response.body)).sources ??
-                [];
-        log("raw category:" + categoryArticles.toString());
-        filteredSourceArticles = categoryArticles.where((sources) {
-          return sources.name != null &&
-              sources.name!.isNotEmpty &&
-              sources.url != null &&
-              sources.url!.isNotEmpty;
+            EverythingModel.fromJson(jsonDecode(response.body)).articles ?? [];
+        filteredSourceArticles = categoryArticles.where((article) {
+          return article.title != null &&
+              article.title!.isNotEmpty &&
+              article.urlToImage != null &&
+              article.urlToImage!.isNotEmpty &&
+              article.source!.name != "[Removed]";
         }).toList();
-        log("filetered category:" + filteredArticles.toString());
         categoryArticles = filteredSourceArticles;
-        log("category:" + categoryArticles.toString());
       } else {
         log("error:status code:" + response.statusCode.toString());
       }

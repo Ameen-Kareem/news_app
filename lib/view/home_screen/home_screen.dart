@@ -5,7 +5,7 @@ import 'package:flutter_carousel_widget/flutter_carousel_widget.dart';
 import 'package:news_app/controller/home_screen_controller.dart';
 import 'package:news_app/controller/user_validation_controller.dart';
 import 'package:news_app/dummydb.dart';
-import 'package:news_app/model/source_model.dart';
+import 'package:news_app/view/news_details_screen/news_details_screen.dart';
 import 'package:news_app/view/search_result_screen/search_result_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,12 +33,13 @@ class HomeScreenState extends State<HomeScreen> {
       context.watch<UserValidationController>().getUser();
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       id = prefs.getInt('currentUserId');
-      log(id.toString());
+      log("id" + id.toString());
       country = widget.country != null
           ? widget.country
           : await context.read<UserValidationController>().getCountry(id ?? 0);
-      log(country.toString());
+      log("country" + country.toString());
     };
+    // category initialisation
     if (count == 0) {
       for (int i = 0; i < Dummydb.category.length; i++) {
         categories.addAll(Dummydb.category[i].keys);
@@ -48,14 +49,19 @@ class HomeScreenState extends State<HomeScreen> {
     }
     log("country:$country");
     super.initState();
+    //trending news initialisation
+    WidgetsFlutterBinding.ensureInitialized();
+
     initializeTrendingNews();
   }
 
   initializeTrendingNews() async {
     await context.read<HomeScreenController>().getTrendingNewsCountry();
-    await context
-        .read<HomeScreenController>()
-        .getNewsByCategory(Dummydb.category[clickedCategory] ?? "All");
+    await context.read<HomeScreenController>().getNewsByCategory(
+        category: Dummydb.category[clickedCategory]
+                [categories[clickedCategory]] ??
+            "all",
+        country: country ?? "us");
   }
 
   int clickedCategory = 0;
@@ -151,15 +157,15 @@ class HomeScreenState extends State<HomeScreen> {
       child: ListView.separated(
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
-        itemCount: Dummydb.category.length,
+        itemCount: categories.length,
         itemBuilder: (context, index) => InkWell(
           onTap: () async {
             _scrollToSelectedIndex(index);
             clickedCategory = index;
-            await context
-                .read<HomeScreenController>()
-                .getNewsByCategory(Dummydb.category[clickedCategory]);
-            log("dummydb:${Dummydb.category[clickedCategory]}");
+            await context.read<HomeScreenController>().getNewsByCategory(
+                category: Dummydb.category[clickedCategory]
+                    [categories[clickedCategory]],
+                country: country ?? "us");
             setState(() {});
           },
           child: Container(
@@ -176,7 +182,7 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        separatorBuilder: (context, index) => SizedBox(
+        separatorBuilder: (context, index) => const SizedBox(
           width: 10,
         ),
       ),
@@ -197,31 +203,42 @@ class HomeScreenState extends State<HomeScreen> {
                     slideIndicatorOptions:
                         SlideIndicatorOptions(indicatorRadius: 3)),
               ),
-              itemBuilder: (context, index, realIndex) => Container(
-                height: 180,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    image: DecorationImage(
-                        image: NetworkImage(
-                            homeProvider.trendingArticles[index].urlToImage ??
-                                ""),
-                        fit: BoxFit.cover)),
+              itemBuilder: (context, index, realIndex) => InkWell(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NewsDetailsScreen(
+                            article: homeProvider.trendingArticles[index]),
+                      ));
+                },
                 child: Container(
+                  height: 180,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
-                      gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [Colors.black, Colors.transparent])),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: homeProvider.isLoading
-                        ? Center(child: CircularProgressIndicator())
-                        : Text(
-                            homeProvider.trendingArticles[index].title ??
-                                "Title Not Found",
-                            style: TextStyle(color: Colors.white, fontSize: 20),
-                          ),
+                      image: DecorationImage(
+                          image: NetworkImage(
+                              homeProvider.trendingArticles[index].urlToImage ??
+                                  ""),
+                          fit: BoxFit.cover)),
+                  child: Container(
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [Colors.black, Colors.transparent])),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: homeProvider.isLoading
+                          ? Center(child: CircularProgressIndicator())
+                          : Text(
+                              homeProvider.trendingArticles[index].title ??
+                                  "Title Not Found",
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 20),
+                            ),
+                    ),
                   ),
                 ),
               ),
@@ -232,6 +249,7 @@ class HomeScreenState extends State<HomeScreen> {
 
   Widget followUpNewsArea() {
     final homeProvider = context.watch<HomeScreenController>();
+    log(homeProvider.categoryArticles.toString());
     return homeProvider.categoryArticles.isEmpty
         ? Center(child: CircularProgressIndicator())
         : ListView.separated(
@@ -239,35 +257,57 @@ class HomeScreenState extends State<HomeScreen> {
               height: 10,
             ),
             shrinkWrap: true,
-            itemCount: 10,
+            itemCount: homeProvider.categoryArticles.length,
             physics: NeverScrollableScrollPhysics(),
             scrollDirection: Axis.vertical,
             itemBuilder: (context, index) {
-              return Container(
-                  height: 140,
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NewsDetailsScreen(
+                            article: homeProvider.categoryArticles[index]),
+                      ));
+                },
+                child: Container(
                   decoration: BoxDecoration(
-                      image: DecorationImage(
-                          image: NetworkImage(
-                              homeProvider.categoryArticles[index].url ?? ""),
-                          fit: BoxFit.cover),
-                      border: Border.all(width: 1),
-                      borderRadius: BorderRadius.circular(5)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(homeProvider.categoryArticles[index].name
-                              .toString() ??
-                          "Source Not Found"),
-                      Spacer(),
-                      Text(
-                        homeProvider.categoryArticles[index].description
-                                .toString() ??
-                            "Source Not Found",
-                        maxLines: 2,
-                      )
-                    ],
-                  ));
+                      gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [Colors.black, Colors.transparent])),
+                  child: Container(
+                      height: 140,
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                          image: DecorationImage(
+                              image: NetworkImage(homeProvider
+                                      .categoryArticles[index].urlToImage ??
+                                  ""),
+                              fit: BoxFit.cover),
+                          border: Border.all(width: 1),
+                          borderRadius: BorderRadius.circular(5)),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            homeProvider.categoryArticles[index].title
+                                    .toString() ??
+                                "Source Not Found",
+                            style: TextStyle(
+                              color: homeProvider
+                                          .categoryArticles[index].urlToImage ==
+                                      null
+                                  ? Colors.green
+                                  : Colors.white,
+                            ),
+                          ),
+                        ],
+                      )),
+                ),
+              );
             },
           );
   }

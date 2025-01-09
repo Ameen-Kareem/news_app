@@ -3,7 +3,8 @@ class Dummydb {
     {"All": "all"},
     {"Business": "business"},
     {"Entertainment": "entertainment"},
-    {"General health": "general health"},
+    {"General": "general"},
+    {"Health": "healthin"},
     {"Science": "science"},
     {"Sports": "sports"},
     {"Technology": "technology"}

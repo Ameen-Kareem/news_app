@@ -60,11 +60,6 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
                     crossAxisCount: 2),
                 itemBuilder: (context, index) => InkWell(
                   onTap: () async {
-                    await context.read<UserValidationController>().addCountry(
-                        country: Dummydb.countries[index]
-                            ["${allCountries[index]}"],
-                        id: id ?? 0);
-
                     selectedCountry =
                         Dummydb.countries[index]["${allCountries[index]}"];
                     selectedIndex = index;

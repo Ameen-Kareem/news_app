@@ -1,13 +1,7 @@
-// To parse this JSON data, do
-//
-//     final everythingModel = everythingModelFromJson(jsonString);
-
 import 'dart:convert';
 
 EverythingModel everythingModelFromJson(String str) =>
     EverythingModel.fromJson(json.decode(str));
-
-
 
 class EverythingModel {
   String? status;
@@ -29,8 +23,6 @@ class EverythingModel {
             : List<Article>.from(
                 json["articles"]!.map((x) => Article.fromJson(x))),
       );
-
-
 }
 
 class Article {
@@ -66,7 +58,6 @@ class Article {
             : DateTime.parse(json["publishedAt"]),
         content: json["content"],
       );
-
 }
 
 class Source {
@@ -82,8 +73,6 @@ class Source {
         id: idValues.map[json["id"]] ?? Id.NOT_FOUND,
         name: nameValues.map[json["name"]] ?? Name.NOT_FOUND,
       );
-
-
 }
 
 enum Id { THE_VERGE, WIRED, NOT_FOUND }
