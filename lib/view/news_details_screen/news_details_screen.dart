@@ -1,16 +1,44 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:news_app/dummydb.dart';
 import 'package:news_app/model/everything_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class NewsDetailsScreen extends StatelessWidget {
   NewsDetailsScreen({super.key, required this.article});
+  Icon savedIcon = Icon(Icons.bookmark_border);
   Article article;
+  bool saved = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          leading: InkWell(
+            onTap: () => Navigator.pop(context),
+            child: Icon(Icons.arrow_back_ios),
+          ),
+          actions: [
+            InkWell(
+                onTap: () {
+                  if (saved == false) {
+                    Dummydb.savedNews.add(article);
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text("News Saved"),
+                    ));
+                    saved = true;
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text("News Already Saved"),
+                    ));
+                  }
+                },
+                child: Icon(Icons.bookmark_border)),
+            SizedBox(
+              width: 15,
+            )
+          ],
+        ),
         body: Column(
           children: [
             Container(

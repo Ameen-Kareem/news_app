@@ -1,3 +1,5 @@
+import 'package:news_app/model/everything_model.dart';
+
 class Dummydb {
   static List category = [
     {"All": "all"},
@@ -60,5 +62,10 @@ class Dummydb {
     {"United States": "us"},
     {"Venezuela": "ve"},
     {"South Africa": "za"}
+  ];
+  static List<Article> savedNews =[
+
+
+    
   ];
 }

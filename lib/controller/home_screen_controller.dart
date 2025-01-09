@@ -71,37 +71,6 @@ class HomeScreenController with ChangeNotifier {
     isLoading = false;
   }
 
-  //   getNewsByCategory(String category) async {
-
-  //     isLoading = true;
-  //     final url = Uri.parse(
-  //         "https://newsapi.org/v2/top-headlines/sources?category=$category&apiKey=17805df1c36c4c94bb8f56613af2d365");
-  //     final response = await http.get(url);
-
-  //     try {
-  //       log("message:status code:" + response.statusCode.toString());
-  //       if (response.statusCode == 200) {
-  //         categoryArticles =
-  //             source.SourceModel.fromJson(jsonDecode(response.body)).sources ??
-  //                 [];
-  //         filteredSourceArticles = categoryArticles.where((sources) {
-  //           return sources.name != null &&
-  //               sources.name!.isNotEmpty &&
-  //               sources.url != null &&
-  //               sources.url!.isNotEmpty;
-  //         }).toList();
-  //         categoryArticles = filteredSourceArticles;
-  //         log("category:" + categoryArticles.toString());
-  //       } else {
-  //         log("error:status code:" + response.statusCode.toString());
-  //       }
-  //     } catch (e) {
-  //       log("error:" + e.toString());
-  //     }
-  //     isLoading = false;
-  //   }
-  // }
-
   getNewsByCategory({required String category, String country = "us"}) async {
     log("received category :" + category);
     if (category == "All" || category == "all") {
